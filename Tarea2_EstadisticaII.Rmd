@@ -1,0 +1,109 @@
+---
+title: "Tarea 1 - CA0307: Estadística Actuarial II"
+author:
+- Anthony Mauricio Jiménez Navarro | C24067
+- Henri Gerard Gabert Hidalgo | B93096
+- Juan Pablo Morgan Sandí | C15319
+output:
+  pdf_document:
+    toc: true
+  html_document:
+    theme: flatly
+    toc: true
+    toc_float:
+      collapsed: true
+date: "2024-10-22"
+---
+
+# Librerias
+```{r}
+# Por si se ocupan
+```
+
+# Ejercicio 1
+
+Primero se crea la función a integrar, la cual sabemos que es
+$$
+\int_0^1 \frac{e^{-x^2}}{1+x^2} d x
+$$
+
+```{r}
+f <- function(x) {
+  exp(-x^2) / (1 + x^2)
+}
+```
+
+Una vez hecho lo anterior, programos el algoritmo de Montecarlo.
+
+```{r}
+# Método de Montecarlo para aproximar la integral
+montecarlo_integration <- function(N) {
+  # Generamos N muestras aleatorias entre 0 y 1
+  x <- runif(N, 0, 1)
+  
+  # Evaluamos la función en los puntos muestreados
+  fx <- f(x)
+  
+  # Estimar la integral como el promedio de f(x)
+  integral_estimate <- mean(fx)
+
+  return(integral_estimate)
+}
+
+N <- 100000  # número de muestras
+
+montecarlo_result <- montecarlo_integration(N)
+
+cat("Aproximación de la integral por Montecarlo:", montecarlo_result, "\n")
+
+```
+Ahora, usando integrate.
+```{r}
+integral_exacta <- integrate(f, 0, 1)
+cat("Aproximación de la integral por Integrate:", integral_exacta$value, "\n")
+cat("El error absoluto de Integrate:", integral_exacta$abs.error, "\n")
+```
+Ahora, la diferencia entre el resultado de Montecarlo y el de Integrate es:
+```{r}
+montecarlo_result - integral_exacta$value
+```
+
+# Ejercicio 2
+
+Primero, se crea la función $f_L$, la cual es
+$$
+f_L(L)= \lambda e^{-\lambda L}
+$$
+La cual, sabiendo que $\lambda = 1$, es $f_L(L)= e^{-L}$
+```{r}
+f_L <- function(L) {
+  return(exp(-L)) 
+}
+```
+
+Por el enunciado sabemos también que $g(L) \sim N(3, 4)$
+```{r}
+g_L <- function(L) {
+  return(dnorm(L, mean = 3, sd = 2))
+}
+```
+
+Una vez creadas las funciones anteriores, se procede a crear el algoritmo de muestreo por importancia.
+```{r}
+# Establecemos la semilla
+set.seed(54321)
+
+n <- 10^4  # número de muestras
+
+# Generar muestras de la distribución normal g
+L_samples <- rnorm(n, mean = 3, sd = 2)
+
+# Estimamos el valor esperado usando la importancia ponderada
+pesos <- f_L(L_samples) / g_L(L_samples)
+perdidas_esperadas <- mean(L_samples * pesos)
+
+cat("La estimación del valor esperado de la pérdida usando muestreo por importancia es:", 
+    perdidas_esperadas, "\n")
+
+```
+
