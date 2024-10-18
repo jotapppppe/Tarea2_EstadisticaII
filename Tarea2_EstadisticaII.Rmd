@@ -175,52 +175,42 @@ f <- function(x) {
 
 Funcion de recalentamiento simulado
 ```{r}
-recalentamientoSimulado <- function(f, x0, T0, alpha, iterMax) {
-  xActual <- x0
-  fActual <- f(xActual)
-  T <- T0
-  evolucion <- numeric(iterMax)
-  
-  for (i in 1:iterMax) {
-    evolucion[i] <- xActual
-    # Generar un vecino aleatorio en el vecindario de xActual
-    xNuevo <- xActual + runif(1, -1, 1)
-    if (xNuevo < 0 || xNuevo > 10) {
-      next  # Saltar si xNuevo está fuera del intervalo [0, 10]
-    }
+resim <- function(f, alpha = 0.5, s0 = 5, niter = 1000, mini = 0, maxi = 10) {
+  s_n <- s0
+  estados <- rep(0, niter)
+  iter_count <- 0
+  for (k in 1:niter) {
+    estados[k] <- s_n
+    T <- (1 - alpha)^k  # Enfriamiento
+    s_new <- rnorm(1, s_n, 1)
     
-    # Evaluar la nueva solución
-    fNuevo <- f(xNuevo)
-    if (fNuevo < fActual || runif(1) < exp((fActual - fNuevo) / T)) {
-      xActual <- xNuevo
-      fActual <- fNuevo
-    }
+    # Asegurarse de que la nueva solución esté dentro de los límites
+    if (s_new < mini) { s_new <- mini }
+    if (s_new > maxi) { s_new <- maxi }
     
-    T <- alpha * T
+    dif <- f(s_new) - f(s_n)
+    if (dif < 0) {
+      s_n <- s_new
+    } else {
+      random <- runif(1, 0, 1)
+      if (random < exp(-dif / T)) {
+        s_n <- s_new
+      }
+    }
+    iter_count <- iter_count + 1
   }
-  
-  return(list(minimo = xActual, historial = evolucion))
+  return(list(r = s_n, e = estados))
 }
 ```
 
-Parametros y aplicacion
+Aplicacion
 ```{r}
-x0 <- 5
-T0 <- 1
-alpha <- 0.99
-iterMax <- 1000
-
-resultado <- recalentamientoSimulado(f, x0, T0, alpha, iterMax)
+Resultado <- resim(f, 0.1, 5, 1000, 0, 10)
 ```
 
 Resultados
 ```{r}
-cat("El valor mínimo estimado de f(x) es en x =", resultado$minimo, "\n")
-
-# Evolucion de los estados
-plot(resultado$historial, type = "l", col = "blue", 
-     main = "Estados de la cadena en el Recalentamiento Simulado",
-     xlab = "Iteraciones", ylab = "Valor de x")
-
+Resultado$r  # Minimo global
+plot(Resultado$e, type = "l", col = "blue", lwd = 2, 
+     ylab = "Estados", xlab = "Iteraciones", main = "Estados de la cadena")
 ```
-
