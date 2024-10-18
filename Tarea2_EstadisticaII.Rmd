@@ -17,7 +17,7 @@ date: "2024-10-22"
 
 # Librerias
 ```{r}
-# Por si se ocupan
+set.seed(2024)
 ```
 
 # Ejercicio 1
@@ -91,7 +91,6 @@ g_L <- function(L) {
 Una vez creadas las funciones anteriores, se procede a crear el algoritmo de muestreo por importancia.
 ```{r}
 # Establecemos la semilla
-set.seed(54321)
 
 n <- 10^4  # número de muestras
 
@@ -104,6 +103,124 @@ perdidas_esperadas <- mean(L_samples * pesos)
 
 cat("La estimación del valor esperado de la pérdida usando muestreo por importancia es:", 
     perdidas_esperadas, "\n")
+
+```
+
+# Ejercicio 3
+
+Se definen los tiempos entre accidentes y las funciones exponencial y gamma, ademas se establecen los parametros de la funcion gamma, todo esto segun lo establecido en el enunciado.
+```{r}
+tiempos <- c(2.72, 1.93, 1.76, 0.49, 6.12, 0.43, 4.01, 1.71, 2.01, 5.96)
+
+lambda_est <- 1 / mean(tiempos)
+
+# Máximo teórico de la densidad aux (gamma)
+m <- max(dgamma(1, 2, 1))
+
+# Simulaciones
+U <- runif(10^4)
+x <- rgamma(10^4, 2, 1)  # Muestras de la dist aux (gamma)
+ngen <- length(x)
+
+# Dist exponecial (objetivo)
+dexp1 <- Vectorize(function(x) dexp(x, lambda_est))
+```
+
+Algoritmo de aceptacion-rechazo
+```{r}
+for(i in 1:10^4){
+  while((U[i] * m) >= dexp1(x[i])){ 
+    U[i] <- runif(1)
+    x[i] <- rgamma(1, 2, 1)
+    ngen <- ngen + 1
+  }
+}
+```
+
+Resultados
+```{r}
+cat("Número de generaciones = ", ngen, "\n")
+cat("Número medio de aceptados = ", ngen / 10^4, "\n")
+cat("Proporción de rechazos = ", 1 - 10^4 / ngen, "\n")
+
+hist(x, breaks = "FD", freq = FALSE, main = "Histograma de \u03BB estimados")
+curve(dexp(x, lambda_est), col = 2, lwd = 2, add = TRUE)
+```
+
+Intervalo de credibilidad al 99%
+```{r}
+cred_interval <- quantile(x, probs = c(0.005, 0.995))
+cat("Intervalo de credibilidad al 99%: [", cred_interval[1], ", ", cred_interval[2], "]\n")
+```
+Aceptacion o rechazo de lambda = 5
+```{r}
+lambda_hip <- 0.5
+if(lambda_hip >= cred_interval[1] && lambda_hip <= cred_interval[2]) {
+  cat("No se rechaza la hipótesis lambda = 0.5, está dentro del intervalo de credibilidad.\n")
+} else {
+  cat("Se rechaza la hipótesis lambda = 0.5, está fuera del intervalo de credibilidad.\n")
+}
+```
+# Ejercicio 4
+
+Funcion
+$$
+f(x) = exp(\frac{sen(10x)}{10cos(x)})
+$$
+```{r}
+f <- function(x) {
+  return(exp(sin(10 * x) / (10 * cos(x))))
+}
+```
+
+Funcion de recalentamiento simulado
+```{r}
+recalentamientoSimulado <- function(f, x0, T0, alpha, iterMax) {
+  xActual <- x0
+  fActual <- f(xActual)
+  T <- T0
+  evolucion <- numeric(iterMax)
+  
+  for (i in 1:iterMax) {
+    evolucion[i] <- xActual
+    # Generar un vecino aleatorio en el vecindario de xActual
+    xNuevo <- xActual + runif(1, -1, 1)
+    if (xNuevo < 0 || xNuevo > 10) {
+      next  # Saltar si xNuevo está fuera del intervalo [0, 10]
+    }
+    
+    # Evaluar la nueva solución
+    fNuevo <- f(xNuevo)
+    if (fNuevo < fActual || runif(1) < exp((fActual - fNuevo) / T)) {
+      xActual <- xNuevo
+      fActual <- fNuevo
+    }
+    
+    T <- alpha * T
+  }
+  
+  return(list(minimo = xActual, historial = evolucion))
+}
+```
+
+Parametros y aplicacion
+```{r}
+x0 <- 5
+T0 <- 1
+alpha <- 0.99
+iterMax <- 1000
+
+resultado <- recalentamientoSimulado(f, x0, T0, alpha, iterMax)
+```
+
+Resultados
+```{r}
+cat("El valor mínimo estimado de f(x) es en x =", resultado$minimo, "\n")
+
+# Evolucion de los estados
+plot(resultado$historial, type = "l", col = "blue", 
+     main = "Estados de la cadena en el Recalentamiento Simulado",
+     xlab = "Iteraciones", ylab = "Valor de x")
 
 ```
 
