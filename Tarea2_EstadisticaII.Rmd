@@ -221,12 +221,14 @@ A)
 # Muestra
 data <- c(4, 2, 5, 6, 3, 4, 7, 5, 6, 4)
 #Numero de iteraciones
-N<-10000
+n<-10000
 #Periodo quemado
 L<-1000
+#Lambda artibtrario de inicio
+lambda_inicio<-runif(1,0,10)
 
 # Función de verosimilitud de Poisson
-poisson_likelihood <- function(lambda, data) {
+poisson <- function(lambda, data) {
   prod(dpois(data, lambda))
 }
 
@@ -236,7 +238,7 @@ gamma_prior <- function(lambda, alpha , beta ) {
 }
 
 # Algoritmo de Metropolis-Hastings
-metropolis_hastings <- function(data, N = 10000, lambda_inicial = runif(1,0,10), alpha = 3, beta = 2) {
+metropolis_hastings <- function(data, N = n, lambda_inicial = lambda_inicio, alpha = 3, beta = 2) {
   
   
   Intentos_lambda <- numeric(N)
@@ -250,8 +252,8 @@ metropolis_hastings <- function(data, N = 10000, lambda_inicial = runif(1,0,10),
     if (propuesta > 0) {  # Para evitar valores negativos de lambda, pues es una poisson 
       
       #Usando el factor de bayes, la propuesta/la actual
-      Aceptacion <- (poisson_likelihood(propuesta, data) * gamma_prior(propuesta, alpha, beta)) /
-                          (poisson_likelihood(lambda_actual, data) * gamma_prior(lambda_actual, alpha, beta))
+      Aceptacion <- (poisson(propuesta, data) * gamma_prior(propuesta, alpha, beta)) /
+                          (poisson(lambda_actual, data) * gamma_prior(lambda_actual, alpha, beta))
       
       #Criterio de Aceptacion o Rechazo
       if (runif(1) < Aceptacion) {
@@ -289,8 +291,8 @@ E)
 ```{r}
 #Normalmente es la suma acumulada/(Iteracion-periodo_quemado)
 
-mean_samples <- cumsum(Muestras_MCMC) / seq_along(Muestras_MCMC)
-plot(mean_samples, type = "l", main = "Convergencia ergódica de la media de la muestra MCMC",
+mean_muestras <- cumsum(Muestras_MCMC) / seq_along(Muestras_MCMC)
+plot(mean_muestras, type = "l", main = "Convergencia ergódica de la media de la muestra MCMC",
      xlab = "Iteraciones", ylab = "Promedios acumulados", col = "blue")
 ```
 
@@ -299,7 +301,7 @@ F)
 mean_lambda <- mean(Muestras_MCMC)
 cat("Estimación de lambda:", mean_lambda, "\n")
 
-cat("Tasa de aceptación \n","NumeroSaltos/TotalIteraciones:" , (metropolis_hastings(data)$Saltos)/(N-L) ,"\n")
+cat("Tasa de aceptación \n","NumeroSaltos/TotalIteraciones:" , (metropolis_hastings(data)$Saltos)/(n-L) ,"\n")
 ```
 
 ```{r}
