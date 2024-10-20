@@ -112,44 +112,54 @@ Se definen los tiempos entre accidentes y las funciones exponencial y gamma, ade
 ```{r}
 tiempos <- c(2.72, 1.93, 1.76, 0.49, 6.12, 0.43, 4.01, 1.71, 2.01, 5.96)
 
-lambda_est <- 1 / mean(tiempos)
+# Definición de las funciones de densidad
+objetivo <- function(lambda, x) {
+  lambda * exp(-lambda * x)
+}
 
-# Máximo teórico de la densidad aux (gamma)
-m <- max(dgamma(1, 2, 1))
-
-# Simulaciones
-U <- runif(10^4)
-x <- rgamma(10^4, 2, 1)  # Muestras de la dist aux (gamma)
-ngen <- length(x)
-
-# Dist exponecial (objetivo)
-dexp1 <- Vectorize(function(x) dexp(x, lambda_est))
+previa <- function(lambda) {
+  dgamma(lambda, shape = 2, rate = 1)
+}
 ```
 
 Algoritmo de aceptacion-rechazo
 ```{r}
-for(i in 1:10^4){
-  while((U[i] * m) >= dexp1(x[i])){ 
-    U[i] <- runif(1)
-    x[i] <- rgamma(1, 2, 1)
-    ngen <- ngen + 1
+n <- 10000
+valoresLambda <- numeric(n)
+
+for (i in 1:n) {
+  repeat {
+    # Generar candidato de la distribución prior
+    lambda <- rgamma(1, shape = 2, rate = 1)
+    
+    # Generar variable uniforme
+    u <- runif(1)
+    
+    # Verificar aceptación
+    if (u < min(objetivo(lambda, tiempos) / previa(lambda))) {
+      valoresLambda[i] <- lambda
+      break
+    }
   }
 }
 ```
 
 Resultados
 ```{r}
+ngen <- n  
 cat("Número de generaciones = ", ngen, "\n")
 cat("Número medio de aceptados = ", ngen / 10^4, "\n")
 cat("Proporción de rechazos = ", 1 - 10^4 / ngen, "\n")
 
-hist(x, breaks = "FD", freq = FALSE, main = "Histograma de \u03BB estimados")
-curve(dexp(x, lambda_est), col = 2, lwd = 2, add = TRUE)
+lambda_est <- 1 / mean(tiempos)
+
+hist(valoresLambda, breaks = "FD", freq = FALSE, main = "")
+curve(dbeta(x, 2, 4), col = 2, lwd = 2, add = TRUE)
 ```
 
 Intervalo de credibilidad al 99%
 ```{r}
-cred_interval <- quantile(x, probs = c(0.005, 0.995))
+cred_interval <- quantile(valoresLambda, probs = c(0.005, 0.995))
 cat("Intervalo de credibilidad al 99%: [", cred_interval[1], ", ", cred_interval[2], "]\n")
 ```
 Aceptacion o rechazo de lambda = 5
