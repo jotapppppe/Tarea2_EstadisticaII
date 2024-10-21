@@ -93,12 +93,22 @@ Una vez creadas las funciones anteriores, se procede a crear el algoritmo de mue
 # Establecemos la semilla
 
 n <- 10^4  # número de muestras
+L_samples <- numeric(0)  # Inicializamos el vector de muestras
 
-# Generar muestras de la distribución normal g
-L_samples <- rnorm(n, mean = 3, sd = 2)
+# Rechazamos valores negativos
+while (length(L_samples) < n) {
+  samples <- rnorm(n, mean = 3, sd = 2)  # Generamos n muestras de N(3, 2^2)
+  L_samples <- c(L_samples, samples[samples > 0])  # Solo conservamos las positivas por la restricción
+  L_samples <- L_samples[1:n]  # Aseguramos que solo tengamos n muestras
+}
 
-# Estimamos el valor esperado usando la importancia ponderada
 pesos <- f_L(L_samples) / g_L(L_samples)
+# Filtrar valores infinitos o NA en los pesos de importancia
+pesos_validos <- is.finite(pesos) & !is.na(pesos)
+L_samples <- L_samples[pesos_validos]
+pesos <- pesos[pesos_validos]
+
+# Calcular la pérdida esperada
 perdidas_esperadas <- mean(L_samples * pesos)
 
 cat("La estimación del valor esperado de la pérdida usando muestreo por importancia es:", 
