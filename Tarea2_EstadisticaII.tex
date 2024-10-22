@@ -97,16 +97,16 @@
 \ifLuaTeX
   \usepackage{selnolig}  % disable illegal ligatures
 \fi
-\usepackage{bookmark}
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
 \IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
 \urlstyle{same}
 \hypersetup{
-  pdftitle={Tarea 1 - CA0307: Estadística Actuarial II},
+  pdftitle={Tarea 2 - CA0307: Estadística Actuarial II},
   pdfauthor={Anthony Mauricio Jiménez Navarro \textbar{} C24067; Henri Gerard Gabert Hidalgo \textbar{} B93096; Juan Pablo Morgan Sandí \textbar{} C15319},
   hidelinks,
   pdfcreator={LaTeX via pandoc}}
 
-\title{Tarea 1 - CA0307: Estadística Actuarial II}
+\title{Tarea 2 - CA0307: Estadística Actuarial II}
 \author{Anthony Mauricio Jiménez Navarro \textbar{} C24067 \and Henri
 Gerard Gabert Hidalgo \textbar{} B93096 \and Juan Pablo Morgan Sandí
 \textbar{} C15319}
@@ -119,15 +119,17 @@ Gerard Gabert Hidalgo \textbar{} B93096 \and Juan Pablo Morgan Sandí
 \setcounter{tocdepth}{2}
 \tableofcontents
 }
-\section{Librerias}\label{librerias}
+\hypertarget{librerias}{%
+\section{Librerias}\label{librerias}}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{set.seed}\NormalTok{(}\DecValTok{2024}\NormalTok{)}
+\CommentTok{\#set.seed(2024)}
 \end{Highlighting}
 \end{Shaded}
 
-\section{Ejercicio 1}\label{ejercicio-1}
+\hypertarget{ejercicio-1}{%
+\section{Ejercicio 1}\label{ejercicio-1}}
 
 Primero se crea la función a integrar, la cual sabemos que es \[
 \int_0^1 \frac{e^{-x^2}}{1+x^2} d x
@@ -168,7 +170,7 @@ Una vez hecho lo anterior, programos el algoritmo de Montecarlo.
 \end{Shaded}
 
 \begin{verbatim}
-## Aproximación de la integral por Montecarlo: 0.6189492
+## Aproximación de la integral por Montecarlo: 0.6189672
 \end{verbatim}
 
 Ahora, usando integrate.
@@ -204,10 +206,11 @@ es:
 \end{Shaded}
 
 \begin{verbatim}
-## [1] 0.0001272235
+## [1] 0.0001451988
 \end{verbatim}
 
-\section{Ejercicio 2}\label{ejercicio-2}
+\hypertarget{ejercicio-2}{%
+\section{Ejercicio 2}\label{ejercicio-2}}
 
 Primero, se crea la función \(f_L\), la cual es \[
 f_L(L)= \lambda e^{-\lambda L}
@@ -237,14 +240,25 @@ algoritmo de muestreo por importancia.
 \begin{Shaded}
 \begin{Highlighting}[]
 \CommentTok{\# Establecemos la semilla}
+\FunctionTok{set.seed}\NormalTok{(}\DecValTok{54321}\NormalTok{)}
 
 \NormalTok{n }\OtherTok{\textless{}{-}} \DecValTok{10}\SpecialCharTok{\^{}}\DecValTok{4}  \CommentTok{\# número de muestras}
+\NormalTok{L\_samples }\OtherTok{\textless{}{-}} \FunctionTok{numeric}\NormalTok{(}\DecValTok{0}\NormalTok{)  }\CommentTok{\# Inicializamos el vector de muestras}
 
-\CommentTok{\# Generar muestras de la distribución normal g}
-\NormalTok{L\_samples }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(n, }\AttributeTok{mean =} \DecValTok{3}\NormalTok{, }\AttributeTok{sd =} \DecValTok{2}\NormalTok{)}
+\CommentTok{\# Rechazamos valores negativos}
+\ControlFlowTok{while}\NormalTok{ (}\FunctionTok{length}\NormalTok{(L\_samples) }\SpecialCharTok{\textless{}}\NormalTok{ n) \{}
+\NormalTok{  samples }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(n, }\AttributeTok{mean =} \DecValTok{3}\NormalTok{, }\AttributeTok{sd =} \DecValTok{2}\NormalTok{)  }\CommentTok{\# Generamos n muestras de N(3, 2\^{}2)}
+\NormalTok{  L\_samples }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(L\_samples, samples[samples }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{])  }\CommentTok{\# Solo conservamos las positivas por la restricción}
+\NormalTok{  L\_samples }\OtherTok{\textless{}{-}}\NormalTok{ L\_samples[}\DecValTok{1}\SpecialCharTok{:}\NormalTok{n]  }\CommentTok{\# Aseguramos que solo tengamos n muestras}
+\NormalTok{\}}
 
-\CommentTok{\# Estimamos el valor esperado usando la importancia ponderada}
 \NormalTok{pesos }\OtherTok{\textless{}{-}} \FunctionTok{f\_L}\NormalTok{(L\_samples) }\SpecialCharTok{/} \FunctionTok{g\_L}\NormalTok{(L\_samples)}
+\CommentTok{\# Filtrar valores infinitos o NA en los pesos de importancia}
+\NormalTok{pesos\_validos }\OtherTok{\textless{}{-}} \FunctionTok{is.finite}\NormalTok{(pesos) }\SpecialCharTok{\&} \SpecialCharTok{!}\FunctionTok{is.na}\NormalTok{(pesos)}
+\NormalTok{L\_samples }\OtherTok{\textless{}{-}}\NormalTok{ L\_samples[pesos\_validos]}
+\NormalTok{pesos }\OtherTok{\textless{}{-}}\NormalTok{ pesos[pesos\_validos]}
+
+\CommentTok{\# Calcular la pérdida esperada}
 \NormalTok{perdidas\_esperadas }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(L\_samples }\SpecialCharTok{*}\NormalTok{ pesos)}
 
 \FunctionTok{cat}\NormalTok{(}\StringTok{"La estimación del valor esperado de la pérdida usando muestreo por importancia es:"}\NormalTok{, }
@@ -253,10 +267,11 @@ algoritmo de muestreo por importancia.
 \end{Shaded}
 
 \begin{verbatim}
-## La estimación del valor esperado de la pérdida usando muestreo por importancia es: -553.1743
+## La estimación del valor esperado de la pérdida usando muestreo por importancia es: 1.069952
 \end{verbatim}
 
-\section{Ejercicio 3}\label{ejercicio-3}
+\hypertarget{ejercicio-3}{%
+\section{Ejercicio 3}\label{ejercicio-3}}
 
 Se definen los tiempos entre accidentes y las funciones exponencial y
 gamma, ademas se establecen los parametros de la funcion gamma, todo
@@ -266,18 +281,14 @@ esto segun lo establecido en el enunciado.
 \begin{Highlighting}[]
 \NormalTok{tiempos }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\FloatTok{2.72}\NormalTok{, }\FloatTok{1.93}\NormalTok{, }\FloatTok{1.76}\NormalTok{, }\FloatTok{0.49}\NormalTok{, }\FloatTok{6.12}\NormalTok{, }\FloatTok{0.43}\NormalTok{, }\FloatTok{4.01}\NormalTok{, }\FloatTok{1.71}\NormalTok{, }\FloatTok{2.01}\NormalTok{, }\FloatTok{5.96}\NormalTok{)}
 
-\NormalTok{lambda\_est }\OtherTok{\textless{}{-}} \DecValTok{1} \SpecialCharTok{/} \FunctionTok{mean}\NormalTok{(tiempos)}
+\CommentTok{\# Definición de las funciones de densidad}
+\NormalTok{objetivo }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(lambda, x) \{}
+\NormalTok{  lambda }\SpecialCharTok{*} \FunctionTok{exp}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{lambda }\SpecialCharTok{*}\NormalTok{ x)}
+\NormalTok{\}}
 
-\CommentTok{\# Máximo teórico de la densidad aux (gamma)}
-\NormalTok{m }\OtherTok{\textless{}{-}} \FunctionTok{max}\NormalTok{(}\FunctionTok{dgamma}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{))}
-
-\CommentTok{\# Simulaciones}
-\NormalTok{U }\OtherTok{\textless{}{-}} \FunctionTok{runif}\NormalTok{(}\DecValTok{10}\SpecialCharTok{\^{}}\DecValTok{4}\NormalTok{)}
-\NormalTok{x }\OtherTok{\textless{}{-}} \FunctionTok{rgamma}\NormalTok{(}\DecValTok{10}\SpecialCharTok{\^{}}\DecValTok{4}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{)  }\CommentTok{\# Muestras de la dist aux (gamma)}
-\NormalTok{ngen }\OtherTok{\textless{}{-}} \FunctionTok{length}\NormalTok{(x)}
-
-\CommentTok{\# Dist exponecial (objetivo)}
-\NormalTok{dexp1 }\OtherTok{\textless{}{-}} \FunctionTok{Vectorize}\NormalTok{(}\ControlFlowTok{function}\NormalTok{(x) }\FunctionTok{dexp}\NormalTok{(x, lambda\_est))}
+\NormalTok{previa }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(lambda) \{}
+  \FunctionTok{dgamma}\NormalTok{(lambda, }\AttributeTok{shape =} \DecValTok{2}\NormalTok{, }\AttributeTok{rate =} \DecValTok{1}\NormalTok{)}
+\NormalTok{\}}
 \end{Highlighting}
 \end{Shaded}
 
@@ -285,11 +296,22 @@ Algoritmo de aceptacion-rechazo
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\ControlFlowTok{for}\NormalTok{(i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\DecValTok{10}\SpecialCharTok{\^{}}\DecValTok{4}\NormalTok{)\{}
-  \ControlFlowTok{while}\NormalTok{((U[i] }\SpecialCharTok{*}\NormalTok{ m) }\SpecialCharTok{\textgreater{}=} \FunctionTok{dexp1}\NormalTok{(x[i]))\{ }
-\NormalTok{    U[i] }\OtherTok{\textless{}{-}} \FunctionTok{runif}\NormalTok{(}\DecValTok{1}\NormalTok{)}
-\NormalTok{    x[i] }\OtherTok{\textless{}{-}} \FunctionTok{rgamma}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{1}\NormalTok{)}
-\NormalTok{    ngen }\OtherTok{\textless{}{-}}\NormalTok{ ngen }\SpecialCharTok{+} \DecValTok{1}
+\NormalTok{n }\OtherTok{\textless{}{-}} \DecValTok{10000}
+\NormalTok{valoresLambda }\OtherTok{\textless{}{-}} \FunctionTok{numeric}\NormalTok{(n)}
+
+\ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{n) \{}
+  \ControlFlowTok{repeat}\NormalTok{ \{}
+    \CommentTok{\# Generar candidato de la distribución prior}
+\NormalTok{    lambda }\OtherTok{\textless{}{-}} \FunctionTok{rgamma}\NormalTok{(}\DecValTok{1}\NormalTok{, }\AttributeTok{shape =} \DecValTok{2}\NormalTok{, }\AttributeTok{rate =} \DecValTok{1}\NormalTok{)}
+    
+    \CommentTok{\# Generar variable uniforme}
+\NormalTok{    u }\OtherTok{\textless{}{-}} \FunctionTok{runif}\NormalTok{(}\DecValTok{1}\NormalTok{)}
+    
+    \CommentTok{\# Verificar aceptación}
+    \ControlFlowTok{if}\NormalTok{ (u }\SpecialCharTok{\textless{}} \FunctionTok{min}\NormalTok{(}\FunctionTok{objetivo}\NormalTok{(lambda, tiempos) }\SpecialCharTok{/} \FunctionTok{previa}\NormalTok{(lambda))) \{}
+\NormalTok{      valoresLambda[i] }\OtherTok{\textless{}{-}}\NormalTok{ lambda}
+      \ControlFlowTok{break}
+\NormalTok{    \}}
 \NormalTok{  \}}
 \NormalTok{\}}
 \end{Highlighting}
@@ -299,12 +321,13 @@ Resultados
 
 \begin{Shaded}
 \begin{Highlighting}[]
+\NormalTok{ngen }\OtherTok{\textless{}{-}}\NormalTok{ n  }
 \FunctionTok{cat}\NormalTok{(}\StringTok{"Número de generaciones = "}\NormalTok{, ngen, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## Número de generaciones =  18718
+## Número de generaciones =  10000
 \end{verbatim}
 
 \begin{Shaded}
@@ -314,7 +337,7 @@ Resultados
 \end{Shaded}
 
 \begin{verbatim}
-## Número medio de aceptados =  1.8718
+## Número medio de aceptados =  1
 \end{verbatim}
 
 \begin{Shaded}
@@ -324,13 +347,15 @@ Resultados
 \end{Shaded}
 
 \begin{verbatim}
-## Proporción de rechazos =  0.4657549
+## Proporción de rechazos =  0
 \end{verbatim}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{hist}\NormalTok{(x, }\AttributeTok{breaks =} \StringTok{"FD"}\NormalTok{, }\AttributeTok{freq =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{main =} \StringTok{"Histograma de \textbackslash{}u03BB estimados"}\NormalTok{)}
-\FunctionTok{curve}\NormalTok{(}\FunctionTok{dexp}\NormalTok{(x, lambda\_est), }\AttributeTok{col =} \DecValTok{2}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{, }\AttributeTok{add =} \ConstantTok{TRUE}\NormalTok{)}
+\NormalTok{lambda\_est }\OtherTok{\textless{}{-}} \DecValTok{1} \SpecialCharTok{/} \FunctionTok{mean}\NormalTok{(tiempos)}
+
+\FunctionTok{hist}\NormalTok{(valoresLambda, }\AttributeTok{breaks =} \StringTok{"FD"}\NormalTok{, }\AttributeTok{freq =} \ConstantTok{FALSE}\NormalTok{, }\AttributeTok{main =} \StringTok{""}\NormalTok{)}
+\FunctionTok{curve}\NormalTok{(}\FunctionTok{dbeta}\NormalTok{(x, }\DecValTok{2}\NormalTok{, }\DecValTok{4}\NormalTok{), }\AttributeTok{col =} \DecValTok{2}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{, }\AttributeTok{add =} \ConstantTok{TRUE}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -340,13 +365,13 @@ Intervalo de credibilidad al 99\%
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{cred\_interval }\OtherTok{\textless{}{-}} \FunctionTok{quantile}\NormalTok{(x, }\AttributeTok{probs =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.005}\NormalTok{, }\FloatTok{0.995}\NormalTok{))}
+\NormalTok{cred\_interval }\OtherTok{\textless{}{-}} \FunctionTok{quantile}\NormalTok{(valoresLambda, }\AttributeTok{probs =} \FunctionTok{c}\NormalTok{(}\FloatTok{0.005}\NormalTok{, }\FloatTok{0.995}\NormalTok{))}
 \FunctionTok{cat}\NormalTok{(}\StringTok{"Intervalo de credibilidad al 99\%: ["}\NormalTok{, cred\_interval[}\DecValTok{1}\NormalTok{], }\StringTok{", "}\NormalTok{, cred\_interval[}\DecValTok{2}\NormalTok{], }\StringTok{"]}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## Intervalo de credibilidad al 99%: [ 0.07527111 ,  5.484737 ]
+## Intervalo de credibilidad al 99%: [ 0.01597998 ,  1.194903 ]
 \end{verbatim}
 
 Aceptacion o rechazo de lambda = 5
@@ -366,7 +391,8 @@ Aceptacion o rechazo de lambda = 5
 ## No se rechaza la hipótesis lambda = 0.5, está dentro del intervalo de credibilidad.
 \end{verbatim}
 
-\section{Ejercicio 4}\label{ejercicio-4}
+\hypertarget{ejercicio-4}{%
+\section{Ejercicio 4}\label{ejercicio-4}}
 
 Funcion \[
 f(x) = exp(\frac{sen(10x)}{10cos(x)})
@@ -384,45 +410,40 @@ Funcion de recalentamiento simulado
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{recalentamientoSimulado }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(f, x0, T0, alpha, iterMax) \{}
-\NormalTok{  xActual }\OtherTok{\textless{}{-}}\NormalTok{ x0}
-\NormalTok{  fActual }\OtherTok{\textless{}{-}} \FunctionTok{f}\NormalTok{(xActual)}
-\NormalTok{  T }\OtherTok{\textless{}{-}}\NormalTok{ T0}
-\NormalTok{  evolucion }\OtherTok{\textless{}{-}} \FunctionTok{numeric}\NormalTok{(iterMax)}
-  
-  \ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{iterMax) \{}
-\NormalTok{    evolucion[i] }\OtherTok{\textless{}{-}}\NormalTok{ xActual}
-    \CommentTok{\# Generar un vecino aleatorio en el vecindario de xActual}
-\NormalTok{    xNuevo }\OtherTok{\textless{}{-}}\NormalTok{ xActual }\SpecialCharTok{+} \FunctionTok{runif}\NormalTok{(}\DecValTok{1}\NormalTok{, }\SpecialCharTok{{-}}\DecValTok{1}\NormalTok{, }\DecValTok{1}\NormalTok{)}
-    \ControlFlowTok{if}\NormalTok{ (xNuevo }\SpecialCharTok{\textless{}} \DecValTok{0} \SpecialCharTok{||}\NormalTok{ xNuevo }\SpecialCharTok{\textgreater{}} \DecValTok{10}\NormalTok{) \{}
-      \ControlFlowTok{next}  \CommentTok{\# Saltar si xNuevo está fuera del intervalo [0, 10]}
-\NormalTok{    \}}
+\NormalTok{resim }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(f, }\AttributeTok{alpha =} \FloatTok{0.5}\NormalTok{, }\AttributeTok{s0 =} \DecValTok{5}\NormalTok{, }\AttributeTok{niter =} \DecValTok{1000}\NormalTok{, }\AttributeTok{mini =} \DecValTok{0}\NormalTok{, }\AttributeTok{maxi =} \DecValTok{10}\NormalTok{) \{}
+\NormalTok{  s\_n }\OtherTok{\textless{}{-}}\NormalTok{ s0}
+\NormalTok{  estados }\OtherTok{\textless{}{-}} \FunctionTok{rep}\NormalTok{(}\DecValTok{0}\NormalTok{, niter)}
+\NormalTok{  iter\_count }\OtherTok{\textless{}{-}} \DecValTok{0}
+  \ControlFlowTok{for}\NormalTok{ (k }\ControlFlowTok{in} \DecValTok{1}\SpecialCharTok{:}\NormalTok{niter) \{}
+\NormalTok{    estados[k] }\OtherTok{\textless{}{-}}\NormalTok{ s\_n}
+\NormalTok{    T }\OtherTok{\textless{}{-}}\NormalTok{ (}\DecValTok{1} \SpecialCharTok{{-}}\NormalTok{ alpha)}\SpecialCharTok{\^{}}\NormalTok{k  }\CommentTok{\# Enfriamiento}
+\NormalTok{    s\_new }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{1}\NormalTok{, s\_n, }\DecValTok{1}\NormalTok{)}
     
-    \CommentTok{\# Evaluar la nueva solución}
-\NormalTok{    fNuevo }\OtherTok{\textless{}{-}} \FunctionTok{f}\NormalTok{(xNuevo)}
-    \ControlFlowTok{if}\NormalTok{ (fNuevo }\SpecialCharTok{\textless{}}\NormalTok{ fActual }\SpecialCharTok{||} \FunctionTok{runif}\NormalTok{(}\DecValTok{1}\NormalTok{) }\SpecialCharTok{\textless{}} \FunctionTok{exp}\NormalTok{((fActual }\SpecialCharTok{{-}}\NormalTok{ fNuevo) }\SpecialCharTok{/}\NormalTok{ T)) \{}
-\NormalTok{      xActual }\OtherTok{\textless{}{-}}\NormalTok{ xNuevo}
-\NormalTok{      fActual }\OtherTok{\textless{}{-}}\NormalTok{ fNuevo}
-\NormalTok{    \}}
+    \CommentTok{\# Asegurarse de que la nueva solución esté dentro de los límites}
+    \ControlFlowTok{if}\NormalTok{ (s\_new }\SpecialCharTok{\textless{}}\NormalTok{ mini) \{ s\_new }\OtherTok{\textless{}{-}}\NormalTok{ mini \}}
+    \ControlFlowTok{if}\NormalTok{ (s\_new }\SpecialCharTok{\textgreater{}}\NormalTok{ maxi) \{ s\_new }\OtherTok{\textless{}{-}}\NormalTok{ maxi \}}
     
-\NormalTok{    T }\OtherTok{\textless{}{-}}\NormalTok{ alpha }\SpecialCharTok{*}\NormalTok{ T}
+\NormalTok{    dif }\OtherTok{\textless{}{-}} \FunctionTok{f}\NormalTok{(s\_new) }\SpecialCharTok{{-}} \FunctionTok{f}\NormalTok{(s\_n)}
+    \ControlFlowTok{if}\NormalTok{ (dif }\SpecialCharTok{\textless{}} \DecValTok{0}\NormalTok{) \{}
+\NormalTok{      s\_n }\OtherTok{\textless{}{-}}\NormalTok{ s\_new}
+\NormalTok{    \} }\ControlFlowTok{else}\NormalTok{ \{}
+\NormalTok{      random }\OtherTok{\textless{}{-}} \FunctionTok{runif}\NormalTok{(}\DecValTok{1}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{1}\NormalTok{)}
+      \ControlFlowTok{if}\NormalTok{ (random }\SpecialCharTok{\textless{}} \FunctionTok{exp}\NormalTok{(}\SpecialCharTok{{-}}\NormalTok{dif }\SpecialCharTok{/}\NormalTok{ T)) \{}
+\NormalTok{        s\_n }\OtherTok{\textless{}{-}}\NormalTok{ s\_new}
+\NormalTok{      \}}
+\NormalTok{    \}}
+\NormalTok{    iter\_count }\OtherTok{\textless{}{-}}\NormalTok{ iter\_count }\SpecialCharTok{+} \DecValTok{1}
 \NormalTok{  \}}
-  
-  \FunctionTok{return}\NormalTok{(}\FunctionTok{list}\NormalTok{(}\AttributeTok{minimo =}\NormalTok{ xActual, }\AttributeTok{historial =}\NormalTok{ evolucion))}
+  \FunctionTok{return}\NormalTok{(}\FunctionTok{list}\NormalTok{(}\AttributeTok{r =}\NormalTok{ s\_n, }\AttributeTok{e =}\NormalTok{ estados))}
 \NormalTok{\}}
 \end{Highlighting}
 \end{Shaded}
 
-Parametros y aplicacion
+Aplicacion
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\NormalTok{x0 }\OtherTok{\textless{}{-}} \DecValTok{5}
-\NormalTok{T0 }\OtherTok{\textless{}{-}} \DecValTok{1}
-\NormalTok{alpha }\OtherTok{\textless{}{-}} \FloatTok{0.99}
-\NormalTok{iterMax }\OtherTok{\textless{}{-}} \DecValTok{1000}
-
-\NormalTok{resultado }\OtherTok{\textless{}{-}} \FunctionTok{recalentamientoSimulado}\NormalTok{(f, x0, T0, alpha, iterMax)}
+\NormalTok{Resultado }\OtherTok{\textless{}{-}} \FunctionTok{resim}\NormalTok{(f, }\FloatTok{0.1}\NormalTok{, }\DecValTok{5}\NormalTok{, }\DecValTok{1000}\NormalTok{, }\DecValTok{0}\NormalTok{, }\DecValTok{10}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
@@ -430,23 +451,176 @@ Resultados
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\FunctionTok{cat}\NormalTok{(}\StringTok{"El valor mínimo estimado de f(x) es en x ="}\NormalTok{, resultado}\SpecialCharTok{$}\NormalTok{minimo, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\NormalTok{Resultado}\SpecialCharTok{$}\NormalTok{r  }\CommentTok{\# Minimo global}
 \end{Highlighting}
 \end{Shaded}
 
 \begin{verbatim}
-## El valor mínimo estimado de f(x) es en x = 8.301542
+## [1] 4.711989
 \end{verbatim}
 
 \begin{Shaded}
 \begin{Highlighting}[]
-\CommentTok{\# Evolucion de los estados}
-\FunctionTok{plot}\NormalTok{(resultado}\SpecialCharTok{$}\NormalTok{historial, }\AttributeTok{type =} \StringTok{"l"}\NormalTok{, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{, }
-     \AttributeTok{main =} \StringTok{"Estados de la cadena en el Recalentamiento Simulado"}\NormalTok{,}
-     \AttributeTok{xlab =} \StringTok{"Iteraciones"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"Valor de x"}\NormalTok{)}
+\FunctionTok{plot}\NormalTok{(Resultado}\SpecialCharTok{$}\NormalTok{e, }\AttributeTok{type =} \StringTok{"l"}\NormalTok{, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{, }\AttributeTok{lwd =} \DecValTok{2}\NormalTok{, }
+     \AttributeTok{ylab =} \StringTok{"Estados"}\NormalTok{, }\AttributeTok{xlab =} \StringTok{"Iteraciones"}\NormalTok{, }\AttributeTok{main =} \StringTok{"Estados de la cadena"}\NormalTok{)}
 \end{Highlighting}
 \end{Shaded}
 
 \includegraphics{Tarea2_EstadisticaII_files/figure-latex/unnamed-chunk-17-1.pdf}
+
+\#Ejercicio 5 A)
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Muestra}
+\NormalTok{data }\OtherTok{\textless{}{-}} \FunctionTok{c}\NormalTok{(}\DecValTok{4}\NormalTok{, }\DecValTok{2}\NormalTok{, }\DecValTok{5}\NormalTok{, }\DecValTok{6}\NormalTok{, }\DecValTok{3}\NormalTok{, }\DecValTok{4}\NormalTok{, }\DecValTok{7}\NormalTok{, }\DecValTok{5}\NormalTok{, }\DecValTok{6}\NormalTok{, }\DecValTok{4}\NormalTok{)}
+\CommentTok{\#Numero de iteraciones}
+\NormalTok{n}\OtherTok{\textless{}{-}}\DecValTok{10000}
+\CommentTok{\#Periodo quemado}
+\NormalTok{L}\OtherTok{\textless{}{-}}\DecValTok{1000}
+\CommentTok{\#Lambda artibtrario de inicio}
+\NormalTok{lambda\_inicio}\OtherTok{\textless{}{-}}\FunctionTok{runif}\NormalTok{(}\DecValTok{1}\NormalTok{,}\DecValTok{0}\NormalTok{,}\DecValTok{10}\NormalTok{)}
+
+\CommentTok{\# Función de verosimilitud de Poisson}
+\NormalTok{poisson }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(lambda, data) \{}
+  \FunctionTok{prod}\NormalTok{(}\FunctionTok{dpois}\NormalTok{(data, lambda))}
+\NormalTok{\}}
+
+\CommentTok{\# Función de distribución gamma a priori}
+\NormalTok{gamma\_prior }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(lambda, alpha , beta ) \{}
+  \FunctionTok{dgamma}\NormalTok{(lambda, }\AttributeTok{shape =}\NormalTok{ alpha, }\AttributeTok{rate =}\NormalTok{ beta)}
+\NormalTok{\}}
+
+\CommentTok{\# Algoritmo de Metropolis{-}Hastings}
+\NormalTok{metropolis\_hastings }\OtherTok{\textless{}{-}} \ControlFlowTok{function}\NormalTok{(data, }\AttributeTok{N =}\NormalTok{ n, }\AttributeTok{lambda\_inicial =}\NormalTok{ lambda\_inicio, }
+                                \AttributeTok{alpha =} \DecValTok{3}\NormalTok{, }\AttributeTok{beta =} \DecValTok{2}\NormalTok{) \{}
+  
+  
+\NormalTok{  Intentos\_lambda }\OtherTok{\textless{}{-}} \FunctionTok{numeric}\NormalTok{(N)}
+\NormalTok{  Intentos\_lambda[}\DecValTok{1}\NormalTok{] }\OtherTok{\textless{}{-}}\NormalTok{ lambda\_inicial}
+\NormalTok{  lambda\_actual }\OtherTok{\textless{}{-}}\NormalTok{ lambda\_inicial}
+\NormalTok{  Saltos }\OtherTok{\textless{}{-}} \DecValTok{0}
+  
+  \ControlFlowTok{for}\NormalTok{ (i }\ControlFlowTok{in} \DecValTok{2}\SpecialCharTok{:}\NormalTok{N) \{}
+\NormalTok{    propuesta }\OtherTok{\textless{}{-}} \FunctionTok{rnorm}\NormalTok{(}\DecValTok{1}\NormalTok{, }\AttributeTok{mean =}\NormalTok{ lambda\_actual, }\AttributeTok{sd =} \FloatTok{0.5}\NormalTok{)  }\CommentTok{\# Propuesta}
+    
+    \ControlFlowTok{if}\NormalTok{ (propuesta }\SpecialCharTok{\textgreater{}} \DecValTok{0}\NormalTok{) \{  }\CommentTok{\# Para evitar valores negativos de lambda, pues es una poisson }
+      
+      \CommentTok{\#Usando el factor de bayes, la propuesta/la actual}
+\NormalTok{      Aceptacion }\OtherTok{\textless{}{-}}\NormalTok{ (}\FunctionTok{poisson}\NormalTok{(propuesta, data) }\SpecialCharTok{*} \FunctionTok{gamma\_prior}\NormalTok{(propuesta, alpha, beta)) }\SpecialCharTok{/}
+\NormalTok{                          (}\FunctionTok{poisson}\NormalTok{(lambda\_actual, data) }\SpecialCharTok{*} \FunctionTok{gamma\_prior}\NormalTok{(lambda\_actual, }
+\NormalTok{                                                                      alpha, beta))}
+      
+      \CommentTok{\#Criterio de Aceptacion o Rechazo}
+      \ControlFlowTok{if}\NormalTok{ (}\FunctionTok{runif}\NormalTok{(}\DecValTok{1}\NormalTok{) }\SpecialCharTok{\textless{}}\NormalTok{ Aceptacion) \{}
+\NormalTok{        lambda\_actual }\OtherTok{\textless{}{-}}\NormalTok{ propuesta}
+\NormalTok{        Saltos }\OtherTok{\textless{}{-}}\NormalTok{ Saltos }\SpecialCharTok{+} \DecValTok{1}
+\NormalTok{      \}}
+\NormalTok{    \}}
+\NormalTok{    Intentos\_lambda[i] }\OtherTok{\textless{}{-}}\NormalTok{ lambda\_actual}
+\NormalTok{  \}}
+  \FunctionTok{return}\NormalTok{(}\FunctionTok{list}\NormalTok{(}\AttributeTok{Intentos\_lambda =}\NormalTok{ Intentos\_lambda[(L}\SpecialCharTok{+}\DecValTok{1}\NormalTok{)}\SpecialCharTok{:}\NormalTok{N], }\AttributeTok{Saltos =}\NormalTok{ Saltos))}
+\NormalTok{\}}
+
+\CommentTok{\# Ejecutar el algoritmo con n = 10000}
+\NormalTok{Muestras\_MCMC }\OtherTok{\textless{}{-}} \FunctionTok{metropolis\_hastings}\NormalTok{(data)}\SpecialCharTok{$}\NormalTok{Intentos\_lambda}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{enumerate}
+\def\labelenumi{\Alph{enumi})}
+\setcounter{enumi}{1}
+\tightlist
+\item
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{hist}\NormalTok{(Muestras\_MCMC, }\AttributeTok{breaks =} \DecValTok{30}\NormalTok{, }\AttributeTok{prob =} \ConstantTok{TRUE}\NormalTok{, }\AttributeTok{main =} \StringTok{"Histograma de la muestra MCMC"}\NormalTok{,}
+     \AttributeTok{xlab =} \FunctionTok{expression}\NormalTok{(lambda),}\AttributeTok{ylab =} \StringTok{"Distribución"}\NormalTok{, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Tarea2_EstadisticaII_files/figure-latex/unnamed-chunk-19-1.pdf}
+
+\begin{enumerate}
+\def\labelenumi{\Alph{enumi})}
+\setcounter{enumi}{2}
+\tightlist
+\item
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{plot}\NormalTok{(Muestras\_MCMC, }\AttributeTok{type =} \StringTok{"l"}\NormalTok{, }\AttributeTok{main =} \StringTok{"Traceplot de la muestra MCMC"}\NormalTok{,}
+     \AttributeTok{xlab =} \StringTok{"Iteraciones"}\NormalTok{, }\AttributeTok{ylab =} \FunctionTok{expression}\NormalTok{(lambda), }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Tarea2_EstadisticaII_files/figure-latex/unnamed-chunk-20-1.pdf}
+
+\begin{enumerate}
+\def\labelenumi{\Alph{enumi})}
+\setcounter{enumi}{3}
+\tightlist
+\item
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{acf}\NormalTok{(Muestras\_MCMC, }\AttributeTok{main =} \StringTok{"Gráfico de Autocorrelación de la muestra MCMC"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Tarea2_EstadisticaII_files/figure-latex/unnamed-chunk-21-1.pdf}
+
+\begin{enumerate}
+\def\labelenumi{\Alph{enumi})}
+\setcounter{enumi}{4}
+\tightlist
+\item
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#Normalmente es la suma acumulada/(Iteracion{-}periodo\_quemado)}
+
+\NormalTok{mean\_muestras }\OtherTok{\textless{}{-}} \FunctionTok{cumsum}\NormalTok{(Muestras\_MCMC) }\SpecialCharTok{/} \FunctionTok{seq\_along}\NormalTok{(Muestras\_MCMC)}
+\FunctionTok{plot}\NormalTok{(mean\_muestras, }\AttributeTok{type =} \StringTok{"l"}\NormalTok{, }\AttributeTok{main =} \StringTok{"Convergencia ergódica de la media de la muestra MCMC"}\NormalTok{,}
+     \AttributeTok{xlab =} \StringTok{"Iteraciones"}\NormalTok{, }\AttributeTok{ylab =} \StringTok{"Promedios acumulados"}\NormalTok{, }\AttributeTok{col =} \StringTok{"blue"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{Tarea2_EstadisticaII_files/figure-latex/unnamed-chunk-22-1.pdf}
+
+\begin{enumerate}
+\def\labelenumi{\Alph{enumi})}
+\setcounter{enumi}{5}
+\tightlist
+\item
+\end{enumerate}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{mean\_lambda }\OtherTok{\textless{}{-}} \FunctionTok{mean}\NormalTok{(Muestras\_MCMC)}
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Estimación de lambda:"}\NormalTok{, mean\_lambda, }\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Estimación de lambda: 4.099539
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{cat}\NormalTok{(}\StringTok{"Tasa de aceptación }\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{,}\StringTok{"NumeroSaltos/TotalIteraciones:"}\NormalTok{ , }
+\NormalTok{    (}\FunctionTok{metropolis\_hastings}\NormalTok{(data)}\SpecialCharTok{$}\NormalTok{Saltos)}\SpecialCharTok{/}\NormalTok{(n}\SpecialCharTok{{-}}\NormalTok{L) ,}\StringTok{"}\SpecialCharTok{\textbackslash{}n}\StringTok{"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## Tasa de aceptación 
+##  NumeroSaltos/TotalIteraciones: 0.8252222
+\end{verbatim}
 
 \end{document}
