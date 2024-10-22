@@ -100,7 +100,8 @@ L_samples <- numeric(0)  # Inicializamos el vector de muestras
 # Rechazamos valores negativos
 while (length(L_samples) < n) {
   samples <- rnorm(n, mean = 3, sd = 2)  # Generamos n muestras de N(3, 2^2)
-  L_samples <- c(L_samples, samples[samples > 0])  # Solo conservamos las positivas por la restricción
+  L_samples <- c(L_samples, samples[samples > 0])  
+  # Solo conservamos las positivas por la restricción
   L_samples <- L_samples[1:n]  # Aseguramos que solo tengamos n muestras
 }
 
