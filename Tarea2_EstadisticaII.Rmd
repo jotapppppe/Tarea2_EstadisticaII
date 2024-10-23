@@ -1,5 +1,5 @@
 ---
-title: "Tarea 1 - CA0307: Estadística Actuarial II"
+title: "Tarea 2 - CA0307: Estadística Actuarial II"
 author:
 - Anthony Mauricio Jiménez Navarro | C24067
 - Henri Gerard Gabert Hidalgo | B93096
@@ -17,7 +17,7 @@ date: "2024-10-22"
 
 # Librerias
 ```{r}
-set.seed(2024)
+#set.seed(2024)
 ```
 
 # Ejercicio 1
@@ -36,6 +36,7 @@ f <- function(x) {
 Una vez hecho lo anterior, programos el algoritmo de Montecarlo.
 
 ```{r}
+set.seed(875)
 # Método de Montecarlo para aproximar la integral
 montecarlo_integration <- function(N) {
   # Generamos N muestras aleatorias entre 0 y 1
@@ -65,7 +66,7 @@ cat("El error absoluto de Integrate:", integral_exacta$abs.error, "\n")
 ```
 Ahora, la diferencia entre el resultado de Montecarlo y el de Integrate es:
 ```{r}
-montecarlo_result - integral_exacta$value
+abs(montecarlo_result - integral_exacta$value)
 ```
 
 # Ejercicio 2
@@ -91,14 +92,26 @@ g_L <- function(L) {
 Una vez creadas las funciones anteriores, se procede a crear el algoritmo de muestreo por importancia.
 ```{r}
 # Establecemos la semilla
+set.seed(54321)
 
 n <- 10^4  # número de muestras
+L_samples <- numeric(0)  # Inicializamos el vector de muestras
 
-# Generar muestras de la distribución normal g
-L_samples <- rnorm(n, mean = 3, sd = 2)
+# Rechazamos valores negativos
+while (length(L_samples) < n) {
+  samples <- rnorm(n, mean = 3, sd = 2)  # Generamos n muestras de N(3, 2^2)
+  L_samples <- c(L_samples, samples[samples > 0])  
+  # Solo conservamos las positivas por la restricción
+  L_samples <- L_samples[1:n]  # Aseguramos que solo tengamos n muestras
+}
 
-# Estimamos el valor esperado usando la importancia ponderada
 pesos <- f_L(L_samples) / g_L(L_samples)
+# Filtrar valores infinitos o NA en los pesos de importancia
+pesos_validos <- is.finite(pesos) & !is.na(pesos)
+L_samples <- L_samples[pesos_validos]
+pesos <- pesos[pesos_validos]
+
+# Calcular la pérdida esperada
 perdidas_esperadas <- mean(L_samples * pesos)
 
 cat("La estimación del valor esperado de la pérdida usando muestreo por importancia es:", 
@@ -226,9 +239,11 @@ plot(Resultado$e, type = "l", col = "blue", lwd = 2,
      ylab = "Estados", xlab = "Iteraciones", main = "Estados de la cadena")
 ```
 
-#Ejercicio 5
+# Ejercicio 5
+
 A)
 ```{r}
+set.seed(77)
 # Muestra
 data <- c(4, 2, 5, 6, 3, 4, 7, 5, 6, 4)
 #Numero de iteraciones
@@ -245,11 +260,12 @@ poisson <- function(lambda, data) {
 
 # Función de distribución gamma a priori
 gamma_prior <- function(lambda, alpha , beta ) {
-  dgamma(lambda, shape = alpha, rate = beta)
+  dgamma(lambda, shape = alpha, scale = beta)
 }
 
 # Algoritmo de Metropolis-Hastings
-metropolis_hastings <- function(data, N = n, lambda_inicial = lambda_inicio, alpha = 3, beta = 2) {
+metropolis_hastings <- function(data, N = n, lambda_inicial = lambda_inicio, 
+                                alpha = 3, beta = 2) {
   
   
   Intentos_lambda <- numeric(N)
@@ -258,13 +274,14 @@ metropolis_hastings <- function(data, N = n, lambda_inicial = lambda_inicio, alp
   Saltos <- 0
   
   for (i in 2:N) {
-    propuesta <- rnorm(1, mean = lambda_actual, sd = 0.5)  # Propuesta
+    propuesta <- rnorm(1, mean = lambda_actual, sd = 1)  # Propuesta
     
     if (propuesta > 0) {  # Para evitar valores negativos de lambda, pues es una poisson 
       
       #Usando el factor de bayes, la propuesta/la actual
       Aceptacion <- (poisson(propuesta, data) * gamma_prior(propuesta, alpha, beta)) /
-                          (poisson(lambda_actual, data) * gamma_prior(lambda_actual, alpha, beta))
+                          (poisson(lambda_actual, data) * gamma_prior(lambda_actual, 
+                                                                      alpha, beta))
       
       #Criterio de Aceptacion o Rechazo
       if (runif(1) < Aceptacion) {
@@ -312,9 +329,7 @@ F)
 mean_lambda <- mean(Muestras_MCMC)
 cat("Estimación de lambda:", mean_lambda, "\n")
 
-cat("Tasa de aceptación \n","NumeroSaltos/TotalIteraciones:" , (metropolis_hastings(data)$Saltos)/(n-L) ,"\n")
+cat("Tasa de aceptación \n","NumeroSaltos/TotalIteraciones:" , 
+    (metropolis_hastings(data)$Saltos)/(n-L) ,"\n")
 ```
 
-```{r}
-
-```
