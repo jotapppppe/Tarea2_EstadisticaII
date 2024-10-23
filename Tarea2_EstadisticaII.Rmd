@@ -251,9 +251,9 @@ n<-10000
 #Periodo quemado
 L<-1000
 #Lambda artibtrario de inicio
-lambda_inicio<-runif(1,0,10)
+lambda_inicio<-ceiling(runif(1,0,10))
 
-# Función de verosimilitud de Poisson
+#Función de verosimilitud de Poisson
 poisson <- function(lambda, data) {
   prod(dpois(data, lambda))
 }
@@ -271,27 +271,29 @@ metropolis_hastings <- function(data, N = n, lambda_inicial = lambda_inicio,
   Intentos_lambda <- numeric(N)
   Intentos_lambda[1] <- lambda_inicial
   lambda_actual <- lambda_inicial
-  Saltos <- 0
+  Saltos <- numeric(N)
   
   for (i in 2:N) {
-    propuesta <- rnorm(1, mean = lambda_actual, sd = 1)  # Propuesta
+    propuesta <- rcauchy(1,location = lambda_actual)  # Propuesta
     
     if (propuesta > 0) {  # Para evitar valores negativos de lambda, pues es una poisson 
       
       #Usando el factor de bayes, la propuesta/la actual
       Aceptacion <- (poisson(propuesta, data) * gamma_prior(propuesta, alpha, beta)) /
-                          (poisson(lambda_actual, data) * gamma_prior(lambda_actual, 
-                                                                      alpha, beta))
+                          (poisson(lambda_actual, data) * gamma_prior(lambda_actual,alpha, beta))
       
       #Criterio de Aceptacion o Rechazo
       if (runif(1) < Aceptacion) {
         lambda_actual <- propuesta
-        Saltos <- Saltos + 1
+        Saltos[i] <- 1
+      }
+      else {
+        Saltos[i] <- 0
       }
     }
     Intentos_lambda[i] <- lambda_actual
   }
-  return(list(Intentos_lambda = Intentos_lambda[(L+1):N], Saltos = Saltos))
+  return(list(Intentos_lambda = Intentos_lambda[(L+1):N], Saltos = sum(Saltos[(L+1):N])))
 }
 
 # Ejecutar el algoritmo con n = 10000
