@@ -151,7 +151,8 @@ cat("Número de generaciones = ", ngen, "\n")
 cat("Número medio de aceptados = ", ngen / 10^4, "\n")
 cat("Proporción de rechazos = ", 1 - 10^4 / ngen, "\n")
 
-lambda_est <- 1 / mean(tiempos)
+lambda_est <- mean(valoresLambda)
+cat("Valor de lambda estimado = ", lambda_est)
 
 hist(valoresLambda, breaks = "FD", freq = FALSE, main = "")
 curve(dbeta(x, 2, 4), col = 2, lwd = 2, add = TRUE)
