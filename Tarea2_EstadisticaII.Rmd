@@ -238,7 +238,8 @@ plot(Resultado$e, type = "l", col = "blue", lwd = 2,
      ylab = "Estados", xlab = "Iteraciones", main = "Estados de la cadena")
 ```
 
-#Ejercicio 5
+# Ejercicio 5
+
 A)
 ```{r}
 set.seed(77)
@@ -258,7 +259,7 @@ poisson <- function(lambda, data) {
 
 # Función de distribución gamma a priori
 gamma_prior <- function(lambda, alpha , beta ) {
-  dgamma(lambda, shape = alpha, rate = beta)
+  dgamma(lambda, shape = alpha, scale = beta)
 }
 
 # Algoritmo de Metropolis-Hastings
